@@ -9,6 +9,12 @@ get_hash() {
 
 printout() {
     case "$1" in
+    log)
+        echo -e "\e[30;42;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2"
+        ;;
+    today)
+        echo -e "\e[30;42;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2 \e[0;35;49;1m\e[30;45;1m$(wakatime-cli --today)\e[0;35;49;1m\e[0m"
+        ;;
     verbose)
         if [[ $LOG_VERBOSE == 1 ]]; then
             echo -e "\e[30;42;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2"
@@ -31,6 +37,7 @@ should_heartbeat=false
 heartbeat_timer=0
 printout verbose "initialized: should_heartbeat=$should_heartbeat, heartbeat_timer=$heartbeat_timer"
 
+printout log "bashatime is ready!!"
 while true; do
     printout verbose "waiting for changes..."
     output="$(inotifywait -q -t 1 -r -e modify,create ./)"
@@ -56,7 +63,11 @@ while true; do
             if git ls-files --others --exclude-standard --cached --error-unmatch "$filepath" &>/dev/null; then
                 printout verbose "file is tracked by git"
                 should_heartbeat=true
+                if [[ $first_change == "" ]]; then
+                    first_change=$(date +%s)
+                fi
                 printout verbose "should_heartbeat set to true"
+                printout verbose "first_change set to $first_change"
             else
                 printout verbose "file not tracked by git, ignoring"
             fi
@@ -76,12 +87,15 @@ while true; do
         if [ "$last_hash" != "$current_hash" ]; then
             printout verbose "hash changed, sending to wakatime: $filepath"
             wakatime-cli \
-                --time "$current_time" \
+                --time "$first_change" \
                 --write true \
                 --entity "$filepath" \
-                --plugin "prplwtf/bashatime.sh"
+                --plugin "bashatime.sh by prpl.wtf"
+            printout today "wakatime heartbeat sent"
+            printout verbose "hash: $last_hash -> $current_hash"
             last_hash=$current_hash
-            printout verbose "wakatime sent, updated last_hash"
+            unset first_change
+            printout verbose "updated last_hash and unset first_change"
         else
             printout verbose "hash unchanged, skipping wakatime"
         fi
