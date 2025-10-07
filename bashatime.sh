@@ -57,6 +57,16 @@ get_changed_line() {
     fi
 }
 
+get_cursor_pos() {
+    local filepath="$1"
+    local lineno="$2"
+
+    # get length of the changed line
+    local line_content
+    line_content=$(sed -n "${lineno}p" "$filepath")
+    echo "${#line_content}"
+}
+
 echo -e ""
 echo -e "" \
     "\e[32;1m▟▉▙▝▙▝▙ \e[0;30;42;1m bashatime.sh \e[0m \n" \
@@ -67,7 +77,8 @@ sleep 2
 
 # shellcheck disable=SC2329
 cleanup() {
-    print log "cleaning up.."
+    echo ""
+    printout log "cleaning up.."
     if [[ -d "$CACHE_DIR" ]]; then
         rm -r "$CACHE_DIR"
     fi
@@ -133,25 +144,23 @@ while true; do
             printout verbose "hash changed, sending to wakatime: $filepath"
 
             lineno=$(get_changed_line "$filepath")
-            printout verbose "lineno is $lineno"
+            cursorpos=$(get_cursor_pos "$filepath" "$lineno")
+            printout verbose "lineno is $lineno, cursorpos is $cursorpos"
 
             wakatime-cli \
                 --time "$first_change" \
                 --write true \
                 --entity "$filepath" \
-                --plugin "bashatime.sh by prpl.wtf" \
+                --plugin "bashatime.sh" \
                 --lines-in-file "$(wc -l <"$filepath")" \
-                --lineno "$lineno"
+                --lineno "$lineno" \
+                --cursorpos "$cursorpos"
 
             # update cache after sending
             cache_path=$(get_cache_path "$filepath")
             cp "$filepath" "$cache_path"
 
             printout today "wakatime heartbeat sent"
-            printout verbose "hash: $last_hash -> $current_hash"
-            last_hash=$current_hash
-            unset first_change
-            printout verbose "updated last_hash and unset first_change"
         else
             printout verbose "hash unchanged, skipping wakatime"
         fi
