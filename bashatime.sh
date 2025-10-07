@@ -39,11 +39,9 @@ while true; do
                 echo "should_heartbeat set to true"
             else
                 echo "file not tracked by git, ignoring"
-                should_heartbeat=false
             fi
         else
             echo "regex didn't match output"
-            should_heartbeat=false
         fi
     fi
 
@@ -61,7 +59,7 @@ while true; do
                 --time "$current_time" \
                 --write true \
                 --entity "$filepath" \
-                --plugin "Emma Corp. Makeshift Wakatime"
+                --plugin "prplwtf/bashatime.sh"
             last_hash=$current_hash
             echo "wakatime sent, updated last_hash"
         else
