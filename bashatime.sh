@@ -121,17 +121,21 @@ while true; do
             filepath="${dir}${filename}"
             printout verbose "parsed: dir=$dir, action=$action, filename=$filename, filepath=$filepath"
 
-            # only track if file is actually in git
-            if git ls-files --others --exclude-standard --cached --error-unmatch "$filepath" &>/dev/null; then
-                printout verbose "file is tracked by git"
-                should_heartbeat=true
-                if [[ $first_change == "" ]]; then
-                    first_change=$(date +%s)
+            if [[ -f "$filepath" ]]; then
+                # only track if file is actually in git
+                if git ls-files --others --exclude-standard --cached --error-unmatch "$filepath" &>/dev/null; then
+                    printout verbose "file is tracked by git"
+                    should_heartbeat=true
+                    if [[ $first_change == "" ]]; then
+                        first_change=$(date +%s)
+                    fi
+                    printout verbose "should_heartbeat set to true"
+                    printout verbose "first_change set to $first_change"
+                else
+                    printout verbose "file not tracked by git, ignoring"
                 fi
-                printout verbose "should_heartbeat set to true"
-                printout verbose "first_change set to $first_change"
             else
-                printout verbose "file not tracked by git, ignoring"
+                printout verbose "file does not exist, ignoring"
             fi
         else
             printout verbose "regex didn't match output"
