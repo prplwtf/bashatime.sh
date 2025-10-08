@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# bashatime by Emma (prpl.wtf)
+# MIT License
+BASHATIME_VERSION="1.0"
+
 # shellcheck disable=SC1091
 source .bashatimerc 2>/dev/null
 
@@ -11,6 +15,9 @@ printout() {
     case "$1" in
     log)
         echo -e "\e[30;42;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2"
+        ;;
+    error)
+        echo -e "\e[30;41;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2"
         ;;
     today)
         echo -e "\e[30;42;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2 \e[0;35;49;1m\e[30;45;1m$(wakatime-cli --today)\e[0;35;49;1m\e[0m"
@@ -69,13 +76,13 @@ get_cursor_pos() {
     if [[ $line_length -eq 0 ]]; then
         echo 0
     else
-        echo $((RANDOM % (line_length + 1)))
+        echo "$line_length"
     fi
 }
 
 echo -e ""
 echo -e "" \
-    "\e[32;1m▟▉▙▝▙▝▙ \e[0;30;42;1m bashatime.sh \e[0m \n" \
+    "\e[32;1m▟▉▙▝▙▝▙ \e[0;30;42;1m bashatime.sh \e[0;32;1m $BASHATIME_VERSION\e[0m \n" \
     "\e[32;1m▜▉▛▗▛▗▛ \e[0;2m© 2025 Emma (prpl.wtf)\e[0m \n"
 
 # sleep for fancy animation
@@ -158,19 +165,26 @@ while true; do
             printout verbose "lineno is $lineno, cursorpos is $cursorpos"
 
             wakatime-cli \
-                --time "$first_change" \
+                --time "$current_time" \
                 --write true \
                 --entity "$filepath" \
-                --plugin "bashatime.sh" \
+                --plugin "bashatime.sh/$BASHATIME_VERSION" \
                 --lines-in-file "$(wc -l <"$filepath")" \
                 --lineno "$lineno" \
                 --cursorpos "$cursorpos"
+            waka_exitcode=$?
+            printout verbose "wakatime exit code is $waka_exitcode"
 
             # update cache after sending
             cache_path=$(get_cache_path "$filepath")
             cp "$filepath" "$cache_path"
+            printout verbose "updated file edit cache ($filepath -> $cache_path)"
 
-            printout today "wakatime heartbeat sent"
+            if [[ $waka_exitcode == "0" ]]; then
+                printout today "wakatime heartbeat sent"
+            else
+                printout error "wakatime heartbeat failed"
+            fi
         else
             printout verbose "hash unchanged, skipping wakatime"
         fi
