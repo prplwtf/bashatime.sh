@@ -64,7 +64,13 @@ get_cursor_pos() {
     # get length of the changed line
     local line_content
     line_content=$(sed -n "${lineno}p" "$filepath")
-    echo "${#line_content}"
+    local line_length="${#line_content}"
+
+    if [[ $line_length -eq 0 ]]; then
+        echo 0
+    else
+        echo $((RANDOM % (line_length + 1)))
+    fi
 }
 
 echo -e ""
