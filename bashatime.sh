@@ -20,7 +20,7 @@ printout() {
         echo -e "\e[30;41;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2"
         ;;
     today)
-        echo -e "\e[30;42;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2 \e[0;35;49;1m\e[30;45;1m$(wakatime-cli --today)\e[0;35;49;1m\e[0m"
+        echo -e "\e[30;42;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2 \e[0;35;49;1m\e[30;45;1m$(wakatime-cli --today --today-hide-categories)\e[0;35;49;1m\e[0m"
         ;;
     verbose)
         if [[ $LOG_VERBOSE == 1 ]]; then
@@ -85,9 +85,6 @@ echo -e "" \
     "\e[32;1m▟▉▙▝▙▝▙ \e[0;30;42;1m bashatime.sh \e[0;32;1m $BASHATIME_VERSION\e[0m \n" \
     "\e[32;1m▜▉▛▗▛▗▛ \e[0;2m© 2025 Emma (prpl.wtf)\e[0m \n"
 
-# sleep for fancy animation
-sleep 2
-
 # shellcheck disable=SC2329
 cleanup() {
     echo ""
@@ -95,6 +92,7 @@ cleanup() {
     if [[ -d "$CACHE_DIR" ]]; then
         rm -r "$CACHE_DIR"
     fi
+
     exit
 }
 trap cleanup SIGINT SIGTERM
@@ -103,23 +101,15 @@ last_hash=$(get_hash)
 printout verbose "initial hash: $last_hash"
 
 should_heartbeat=false
-heartbeat_timer=0
-printout verbose "initialized: should_heartbeat=$should_heartbeat, heartbeat_timer=$heartbeat_timer"
+printout verbose "initialized: should_heartbeat=$should_heartbeat"
 
-printout log "bashatime is ready!!"
+printout log "bashatime is ready!"
 while true; do
     printout verbose "waiting for changes..."
-    output="$(inotifywait -q -t 1 -r -e modify,create ./)"
+    output="$(inotifywait -q -r -e modify,create ./)"
     # shellcheck disable=SC2181
     if [[ $? == "0" ]]; then
         printout verbose "inotifywait triggered: $output"
-        current_time=$(date +%s)
-        printout verbose "current time: $current_time"
-
-        if [[ $should_heartbeat == "false" ]]; then
-            heartbeat_timer=$((current_time + 30))
-            printout verbose "setting heartbeat timer to: $heartbeat_timer"
-        fi
 
         if [[ "$output" =~ ^(.*/)[[:space:]]([A-Z]+)[[:space:]](.*)$ ]]; then
             dir="${BASH_REMATCH[1]}"
@@ -150,9 +140,9 @@ while true; do
     fi
 
     current_time=$(date +%s)
-    printout verbose "checking heartbeat: should_heartbeat=$should_heartbeat, current_time=$current_time, heartbeat_timer=$heartbeat_timer"
+    printout verbose "checking heartbeat: should_heartbeat=$should_heartbeat, current_time=$current_time"
 
-    if [[ ($should_heartbeat == true) && ($current_time -ge $heartbeat_timer) ]]; then
+    if [[ ($should_heartbeat == true) && (-f "$filepath") ]]; then
         printout verbose "heartbeat conditions met, checking hash..."
         current_hash=$(get_hash)
         printout verbose "current hash: $current_hash"
@@ -162,14 +152,15 @@ while true; do
 
             lineno=$(get_changed_line "$filepath")
             cursorpos=$(get_cursor_pos "$filepath" "$lineno")
-            printout verbose "lineno is $lineno, cursorpos is $cursorpos"
+            linestotal=$(wc -l <"$filepath")
+            printout verbose "lineno is $lineno, cursorpos is $cursorpos, linestotal is $linestotal"
 
             wakatime-cli \
                 --time "$current_time" \
                 --write true \
                 --entity "$filepath" \
                 --plugin "bashatime.sh/$BASHATIME_VERSION" \
-                --lines-in-file "$(wc -l <"$filepath")" \
+                --lines-in-file "$linestotal" \
                 --lineno "$lineno" \
                 --cursorpos "$cursorpos"
             waka_exitcode=$?
@@ -185,10 +176,24 @@ while true; do
             else
                 printout error "wakatime heartbeat failed"
             fi
+
+            unset lineno
+            unset cursorpos
+            unset linestotal
+            printout verbose "unset lineno, cursorpos, linestotal"
+
+            printout verbose "sleeping 30 seconds"
+            sleep 30
         else
             printout verbose "hash unchanged, skipping wakatime"
         fi
         should_heartbeat=false
-        printout verbose "reset should_heartbeat to false"
+        printout verbose "set should_heartbeat to false"
+
+        unset dir
+        unset action
+        unset filename
+        unset filepath
+        printout verbose "unset dir, action, filename, filepath"
     fi
 done
