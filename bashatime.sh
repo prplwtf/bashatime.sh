@@ -47,6 +47,9 @@ check_dependency git
 check_dependency sed
 check_dependency inotifywait
 check_dependency wakatime-cli
+check_dependency md5sum
+check_dependency xargs
+check_dependency sort
 
 # bashatime requires git ls-files
 if ! git status &>/dev/null; then
@@ -131,7 +134,7 @@ printout verbose "initialized: should_heartbeat=$should_heartbeat"
 printout log "bashatime is ready!"
 while true; do
     printout verbose "waiting for changes..."
-    output="$(inotifywait -q -r -e modify,create ./)"
+    output="$(inotifywait -q -r -e modify,create,delete,move ./)"
     # shellcheck disable=SC2181
     if [[ $? == "0" ]]; then
         printout verbose "inotifywait triggered: $output"
@@ -151,12 +154,18 @@ while true; do
                     printout verbose "should_heartbeat set to true"
                 else
                     printout verbose "file not tracked by git, ignoring"
+                    should_heartbeat=false
+                    printout verbose "should_heartbeat set to false"
                 fi
             else
                 printout verbose "file does not exist, ignoring"
+                should_heartbeat=false
+                printout verbose "should_heartbeat set to false"
             fi
         else
             printout verbose "regex didn't match output"
+            should_heartbeat=false
+            printout verbose "should_heartbeat set to false"
         fi
     fi
 
@@ -226,9 +235,6 @@ while true; do
         unset filepath
         printout verbose "unset dir, action, filename, filepath"
 
-        printout verbose "set last_hash to current_hash ($last_hash -> $current_hash)"
-        last_hash=$current_hash
-
         if [[ $should_wait == true ]]; then
             printout verbose "should_wait is true, sleeping for 30 seconds"
             sleep 30
@@ -236,5 +242,10 @@ while true; do
             unset should_wait
             printout verbose "slept for 30 seconds, unset should_wait"
         fi
+
+        current_hash=$(get_hash)
+        printout verbose "recalculated current_hash ($last_hash -> $current_hash)"
+        last_hash=$current_hash
+        printout verbose "set last_hash to current_hash ($last_hash -> $current_hash)"
     fi
 done
