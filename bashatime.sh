@@ -30,9 +30,34 @@ printout() {
     esac
 }
 
+# alias wakatime-cli to wakatime if wakatime is installed
+if [ -x "$(command -v wakatime)" ]; then
+    alias wakatime-cli=wakatime
+fi
+
+# dependency checks
+check_dependency() {
+    if ! [ -x "$(command -v "$1")" ]; then
+        printout error "dependency '$1' is missing from \$PATH (are you sure that it's installed?)"
+        exit 202
+    fi
+}
+check_dependency diff
+check_dependency git
+check_dependency sed
+check_dependency inotifywait
+check_dependency wakatime-cli
+
+# bashatime requires git ls-files
+if ! git status 2>/dev/null; then
+    printout error "directory is not a git repository"
+    exit 254
+fi
+
 # make cache directory
-CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/bashatime"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/bashatime/$RANDOM"
 mkdir -p "$CACHE_DIR"
+printout verbose "bashatime cache directory is $CACHE_DIR"
 
 get_cache_path() {
     local filepath="$1"
@@ -123,11 +148,7 @@ while true; do
                 if git ls-files --others --exclude-standard --cached --error-unmatch "$filepath" &>/dev/null; then
                     printout verbose "file is tracked by git"
                     should_heartbeat=true
-                    if [[ $first_change == "" ]]; then
-                        first_change=$(date +%s)
-                    fi
                     printout verbose "should_heartbeat set to true"
-                    printout verbose "first_change set to $first_change"
                 else
                     printout verbose "file not tracked by git, ignoring"
                 fi
@@ -146,13 +167,22 @@ while true; do
         printout verbose "heartbeat conditions met, checking hash..."
         current_hash=$(get_hash)
         printout verbose "current hash: $current_hash"
+        printout verbose "last hash: $last_hash"
 
         if [ "$last_hash" != "$current_hash" ]; then
             printout verbose "hash changed, sending to wakatime: $filepath"
 
-            lineno=$(get_changed_line "$filepath")
-            cursorpos=$(get_cursor_pos "$filepath" "$lineno")
-            linestotal=$(wc -l <"$filepath")
+            if [[ $action == "MODIFY" ]]; then
+                printout verbose "file action 'MODIFY'. calculating lineno, cursorpos, linestotal"
+                lineno=$(get_changed_line "$filepath")
+                cursorpos=$(get_cursor_pos "$filepath" "$lineno")
+                linestotal=$(wc -l <"$filepath")
+            else
+                printout verbose "file action is NOT 'MODIFY'. setting lineno to 1, cursorpos to 1, linestotal to 1"
+                lineno=1
+                cursorpos=1
+                linestotal=1
+            fi
             printout verbose "lineno is $lineno, cursorpos is $cursorpos, linestotal is $linestotal"
 
             wakatime-cli \
@@ -181,6 +211,9 @@ while true; do
             unset cursorpos
             unset linestotal
             printout verbose "unset lineno, cursorpos, linestotal"
+
+            printout verbose "set last_hash to current_hash ($last_hash -> $current_hash)"
+            last_hash=$current_hash
 
             printout verbose "sleeping 30 seconds"
             sleep 30
