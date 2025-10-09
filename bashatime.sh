@@ -49,7 +49,7 @@ check_dependency inotifywait
 check_dependency wakatime-cli
 
 # bashatime requires git ls-files
-if ! git status 2>/dev/null; then
+if ! git status &>/dev/null; then
     printout error "directory is not a git repository"
     exit 254
 fi
