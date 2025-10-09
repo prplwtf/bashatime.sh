@@ -212,11 +212,8 @@ while true; do
             unset linestotal
             printout verbose "unset lineno, cursorpos, linestotal"
 
-            printout verbose "set last_hash to current_hash ($last_hash -> $current_hash)"
-            last_hash=$current_hash
-
-            printout verbose "sleeping 30 seconds"
-            sleep 30
+            should_wait=true
+            printout verbose "set should_wait to true"
         else
             printout verbose "hash unchanged, skipping wakatime"
         fi
@@ -228,5 +225,16 @@ while true; do
         unset filename
         unset filepath
         printout verbose "unset dir, action, filename, filepath"
+
+        printout verbose "set last_hash to current_hash ($last_hash -> $current_hash)"
+        last_hash=$current_hash
+
+        if [[ $should_wait == true ]]; then
+            printout verbose "should_wait is true, sleeping for 30 seconds"
+            sleep 30
+
+            unset should_wait
+            printout verbose "slept for 30 seconds, unset should_wait"
+        fi
     fi
 done
