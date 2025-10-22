@@ -58,15 +58,15 @@ if ! git status &>/dev/null; then
 fi
 
 # make cache directory
-CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/bashatime/$RANDOM"
-mkdir -p "$CACHE_DIR"
-printout verbose "bashatime cache directory is $CACHE_DIR"
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/bashatime/$RANDOM"
+mkdir -p "$cache_dir"
+printout verbose "bashatime cache directory is $cache_dir"
 
 get_cache_path() {
     local filepath="$1"
     local hash
     hash=$(echo "$filepath" | md5sum | cut -d' ' -f1)
-    echo "$CACHE_DIR/$hash"
+    echo "$cache_dir/$hash"
 }
 
 get_changed_line() {
@@ -108,6 +108,11 @@ get_cursor_pos() {
     fi
 }
 
+if [[ $PROJECT_NAME == "" ]]; then
+    PROJECT_NAME=${PWD##*/}
+    PROJECT_NAME=${PROJECT_NAME:-/}
+fi
+
 echo -e ""
 echo -e "" \
     "\e[32;1m▟▉▙▝▙▝▙ \e[0;30;42;1m bashatime.sh \e[0;32;1m $BASHATIME_VERSION\e[0m \n" \
@@ -117,8 +122,8 @@ echo -e "" \
 cleanup() {
     echo ""
     printout log "cleaning up.."
-    if [[ -d "$CACHE_DIR" ]]; then
-        rm -r "$CACHE_DIR"
+    if [[ -d "$cache_dir" ]]; then
+        rm -r "$cache_dir"
     fi
 
     exit
@@ -131,7 +136,7 @@ printout verbose "initial hash: $last_hash"
 should_heartbeat=false
 printout verbose "initialized: should_heartbeat=$should_heartbeat"
 
-printout log "bashatime is ready!"
+printout log "bashatime is ready! tracking project $PROJECT_NAME"
 while true; do
     printout verbose "waiting for changes..."
     output="$(inotifywait -q -r -e modify,create,delete,move ./)"
@@ -201,7 +206,8 @@ while true; do
                 --plugin "bashatime.sh/$BASHATIME_VERSION" \
                 --lines-in-file "$linestotal" \
                 --lineno "$lineno" \
-                --cursorpos "$cursorpos"
+                --cursorpos "$cursorpos" \
+                --project "$PROJECT_NAME"
             waka_exitcode=$?
             printout verbose "wakatime exit code is $waka_exitcode"
 
