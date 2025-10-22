@@ -95,4 +95,5 @@ Contributions are welcome. Whenever making changes to `bashatime.sh`, please mak
 
 All users listed below have been bribed to provide positive options. Don't worry though, the bribes were totally ethical. 
 
-[**@NeonGamerBot-QK**](https://github.com/NeonGamerBot-QK): "hi im neon and im pretty sure ts is oke doke"
+[**@NeonGamerBot-QK**](https://github.com/NeonGamerBot-QK): "hi im neon and im pretty sure ts is oke doke"\
+[**@3kh0**](https://github.com/3kh0): "who hurt you"
