@@ -1,1 +1,5 @@
-LOG_VERBOSE=1
+# The name of your project, defaults to the parent folder name
+PROJECT_NAME=""
+
+# Uncomment to output verbose logs as well
+#LOG_VERBOSE="1"
