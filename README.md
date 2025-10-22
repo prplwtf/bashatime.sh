@@ -73,6 +73,10 @@ PROJECT_NAME=""
 #LOG_VERBOSE="1"
 ```
 
+### Wakatime configuration
+
+bashatime uses the `wakatime-api` cli tool to submit heartbeats. Use the `~/.wakatime.cfg` config for your API url, key, and other configuration options.
+
 ## Limitations
 
 bashatime has a few known limitations, it's a bash script after all.
