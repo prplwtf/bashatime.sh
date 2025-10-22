@@ -20,7 +20,7 @@ printout() {
         echo -e "\e[30;41;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2"
         ;;
     today)
-        echo -e "\e[30;42;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2 \e[0;35;49;1m\e[30;45;1m$(wakatime-cli --today --today-hide-categories)\e[0;35;49;1m\e[0m"
+        echo -e "\e[30;42;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2 \e[0;35;49;1m\e[30;45;1m$(wakatime-cli --today --today-hide-categories true)\e[0;35;49;1m\e[0m"
         ;;
     verbose)
         if [[ $LOG_VERBOSE == 1 ]]; then
