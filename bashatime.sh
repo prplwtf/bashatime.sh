@@ -7,10 +7,6 @@ BASHATIME_VERSION="1.1"
 # shellcheck disable=SC1091
 source .bashatimerc 2>/dev/null
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    alias md5sum=md5
-fi
-
 get_hash() {
     git ls-files --others --exclude-standard --cached -z | xargs -0 md5sum | sort | md5sum
 }
@@ -194,7 +190,7 @@ while true; do
                 printout verbose "file action 'Updated'. calculating lineno, cursorpos, linestotal"
                 lineno=$(get_changed_line "$filepath")
                 cursorpos=$(get_cursor_pos "$filepath" "$lineno")
-                linestotal=$(wc -l <"$filepath")
+                linestotal=$(($(wc -l <"$filepath")))
             else
                 printout verbose "file action is NOT 'Updated'. setting lineno to 1, cursorpos to 1, linestotal to 1"
                 lineno=1
