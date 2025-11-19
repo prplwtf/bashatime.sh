@@ -2,7 +2,7 @@
 
 # bashatime by Emma (prpl.wtf)
 # MIT License
-BASHATIME_VERSION="1.0"
+BASHATIME_VERSION="1.1"
 
 # shellcheck disable=SC1091
 source .bashatimerc 2>/dev/null
@@ -20,7 +20,7 @@ printout() {
         echo -e "\e[30;41;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2"
         ;;
     today)
-        echo -e "\e[30;42;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2 \e[0;35;49;1m\e[30;45;1m$(wakatime-cli --today --today-hide-categories true)\e[0;35;49;1m\e[0m"
+        echo -e "\e[30;42;1m bashatime.sh \e[0;30;47m $(date +"%H:%M:%S") \e[0m $2 \e[0;35;49;1m\e[30;45;1m$(wakatime-cli --today --today-hide-categories true)\e[0;35;49;1m\e[0m"
         ;;
     verbose)
         if [[ $LOG_VERBOSE == 1 ]]; then
@@ -45,7 +45,7 @@ check_dependency() {
 check_dependency diff
 check_dependency git
 check_dependency sed
-check_dependency inotifywait
+check_dependency fswatch
 check_dependency wakatime-cli
 check_dependency md5sum
 check_dependency xargs
@@ -139,16 +139,16 @@ printout verbose "initialized: should_heartbeat=$should_heartbeat"
 printout log "bashatime is ready! tracking project $PROJECT_NAME"
 while true; do
     printout verbose "waiting for changes..."
-    output="$(inotifywait -q -r -e modify,create,delete,move ./)"
+    output="$(fswatch -1 -r -x --event Updated --event Created --event Removed --event Renamed . | head -n1)"
     # shellcheck disable=SC2181
     if [[ $? == "0" ]]; then
-        printout verbose "inotifywait triggered: $output"
+        printout verbose "fswatch triggered: $output"
 
-        if [[ "$output" =~ ^(.*/)[[:space:]]([A-Z]+)[[:space:]](.*)$ ]]; then
-            dir="${BASH_REMATCH[1]}"
+        if [[ "$output" =~ ^(.*)[[:space:]]([A-Z][a-z]+)$ ]]; then
+            filepath="${BASH_REMATCH[1]}"
             action="${BASH_REMATCH[2]}"
-            filename="${BASH_REMATCH[3]}"
-            filepath="${dir}${filename}"
+            dir="${filepath%/*}/"
+            filename="${filepath##*/}"
             printout verbose "parsed: dir=$dir, action=$action, filename=$filename, filepath=$filepath"
 
             if [[ -f "$filepath" ]]; then
@@ -186,13 +186,13 @@ while true; do
         if [ "$last_hash" != "$current_hash" ]; then
             printout verbose "hash changed, sending to wakatime: $filepath"
 
-            if [[ $action == "MODIFY" ]]; then
-                printout verbose "file action 'MODIFY'. calculating lineno, cursorpos, linestotal"
+            if [[ $action == "Updated" ]]; then
+                printout verbose "file action 'Updated'. calculating lineno, cursorpos, linestotal"
                 lineno=$(get_changed_line "$filepath")
                 cursorpos=$(get_cursor_pos "$filepath" "$lineno")
                 linestotal=$(wc -l <"$filepath")
             else
-                printout verbose "file action is NOT 'MODIFY'. setting lineno to 1, cursorpos to 1, linestotal to 1"
+                printout verbose "file action is NOT 'Updated'. setting lineno to 1, cursorpos to 1, linestotal to 1"
                 lineno=1
                 cursorpos=1
                 linestotal=1

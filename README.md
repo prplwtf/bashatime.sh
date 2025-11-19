@@ -10,7 +10,7 @@
 
 **Requirements**
 - A Linux machine (MacOS might work too, untested though)
-- `inotify-tools`, to watch for files
+- [`fswatch`](https://github.com/emcrisostomo/fswatch), to watch for files
 - `git`, to know what files to watch
 - `bash`, to run the script
 - `wakatime`/`wakatime-api`, to submit your progress to wakatime
