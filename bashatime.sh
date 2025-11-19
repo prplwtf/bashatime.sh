@@ -7,6 +7,10 @@ BASHATIME_VERSION="1.1"
 # shellcheck disable=SC1091
 source .bashatimerc 2>/dev/null
 
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    alias md5sum=md5
+fi
+
 get_hash() {
     git ls-files --others --exclude-standard --cached -z | xargs -0 md5sum | sort | md5sum
 }
