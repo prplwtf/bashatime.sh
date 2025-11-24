@@ -10,7 +10,7 @@
 
 **Requirements**
 - A Linux machine (MacOS might work too, untested though)
-- [`fswatch`](https://github.com/emcrisostomo/fswatch), to watch for files
+- `inotify-tools`, to watch for files
 - `git`, to know what files to watch
 - `bash`, to run the script
 - `wakatime`/`wakatime-api`, to submit your progress to wakatime
@@ -90,10 +90,3 @@ bashatime has a few known limitations, it's a bash script after all.
 ## Contributing
 
 Contributions are welcome. Whenever making changes to `bashatime.sh`, please make sure it passes shellcheck to avoid weird edge-cases and shell freak-outs.
-
-## Testimonials
-
-All users listed below have been bribed to provide positive options. Don't worry though, the bribes were totally ethical. 
-
-[**@NeonGamerBot-QK**](https://github.com/NeonGamerBot-QK): "hi im neon and im pretty sure ts is oke doke"\
-[**@3kh0**](https://github.com/3kh0): "who hurt you"
