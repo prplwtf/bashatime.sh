@@ -2,7 +2,7 @@
 
 # bashatime by Emma (prpl.wtf)
 # MIT License
-BASHATIME_VERSION="1.1.1"
+BASHATIME_VERSION="1.1.2"
 
 # shellcheck disable=SC1091
 source .bashatimerc 2>/dev/null
@@ -116,7 +116,7 @@ fi
 echo -e ""
 echo -e "" \
     "\e[32;1m▟▉▙▝▙▝▙ \e[0;30;42;1m bashatime.sh \e[0;32;1m $BASHATIME_VERSION\e[0m \n" \
-    "\e[32;1m▜▉▛▗▛▗▛ \e[0;2m© 2025 Emma (prpl.wtf)\e[0m \n"
+    "\e[32;1m▜▉▛▗▛▗▛ \e[0;2m© 2025-2026 Emma (prpl.wtf)\e[0m \n"
 
 # shellcheck disable=SC2329
 cleanup() {
